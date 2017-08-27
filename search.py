@@ -19,6 +19,7 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -72,6 +73,7 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -87,16 +89,68 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # > python pacman.py -l tinyMaze -p SearchAgent -a fn=dfs --frameTime 0
+    route = util.Stack()
+    route.push((problem.getStartState(), []))
+    # to store the visited nodes
+    close_list = []
+    while route:
+        # get the first node out of stack
+        cur_state, actions = route.pop()
+        # return the routes if the poped out node is the goal
+        if problem.isGoalState(cur_state): 
+            return actions
+        # if the node is not expanded before, get its successors
+        elif cur_state not in close_list:
+            close_list.append(cur_state)
+            for successor, action, step_cost in problem.getSuccessors(cur_state):
+                if successor not in close_list:
+                    route.push((successor, actions + [action]))
+
+    return []
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    # > python pacman.py -l mediumMaze -p SearchAgent -a fn=bfs --frameTime 0
+    # initalize a queue to track the route
+    route = util.Queue()
+    route.push((problem.getStartState(), []))
+    close_list = []
+    while route:
+        cur_state, actions = route.pop()
+        if problem.isGoalState(cur_state):
+            return actions
+        elif cur_state not in close_list:
+            close_list.append(cur_state)
+            for successor, action, step_cost in problem.getSuccessors(cur_state):
+                if successor not in close_list:
+                    route.push((successor, actions + [action]))
+        # for successor, action, step_cost in problem.getSuccessors(cur_state):
+        #     if successor not in close_list:
+        #         route.push((successor, actions + [action]))
+                    
     util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+    # > python pacman.py -l mediumMaze -p SearchAgent -a fn=ucs --frameTime 0
+    # > python pacman.py -l trickySearch -p SearchAgent -a fn=ucs,prob=FoodSearchProblem,heuristic=foodHeuristic
+    route = util.PriorityQueue()
+    route.push((problem.getStartState(), []),0)
+    close_list = set()
+
+    while route:
+        cur_state, actions = route.pop()
+        if problem.isGoalState(cur_state):
+            return actions
+        if cur_state not in close_list:
+            close_list.add(cur_state)
+            for successor, action, step_cost in problem.getSuccessors(cur_state):
+                update_cost = problem.getCostOfActions(actions + [action])
+                route.push((successor,actions + [action]), update_cost)
+
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
@@ -109,7 +163,23 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # > python pacman.py -l tinySearch -p AStarFoodSearchAgent
+    # > python pacman.py -l mediumCorners -p AStarCornersAgent -z 0.5
+    # > python pacman.py -l bigSearch -p ClosestDotSearchAgent -z .5
+
+    route = util.PriorityQueue()
+    route.push((problem.getStartState(), []),heuristic(problem.getStartState(), problem))
+    close_list = []
+    while route:
+        cur_state, actions = route.pop()
+        if problem.isGoalState(cur_state):
+            return actions
+        if cur_state not in close_list:
+            close_list.append(cur_state)
+            for successor, action, step_cost in problem.getSuccessors(cur_state):
+                priority =  problem.getCostOfActions(actions + [action]) + heuristic(successor, problem)
+                route.push((successor, actions+[action]), priority)
+    return []
 
 
 # Abbreviations
